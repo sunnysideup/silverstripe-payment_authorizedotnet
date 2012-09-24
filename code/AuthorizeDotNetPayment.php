@@ -29,7 +29,7 @@ class AuthorizeDotNetPayment extends Payment {
 	 * must be set - check for live vs test values
 	 * @var String
 	 **/
-	protected static $transaction_key = 'YOUR_API_LOGIN_ID';
+	protected static $transaction_key = 'YOUR_TRANSACTION_KEY';
 		static function set_transaction_key($s) {self::$transaction_key = $s;}
 
 	/**
@@ -45,6 +45,13 @@ class AuthorizeDotNetPayment extends Payment {
 	 **/
 	protected static $show_form_type = 'PAYMENT_FORM';
 		static function set_show_form_type($s) {self::$show_form_type = $s;}
+
+	/**
+	 * Test URL that form is submitted to
+	 * @var String
+	 **/
+	protected static $debug_url = 'https://developer.authorize.net/tools/paramdump/index.php';
+		static function set_debug_url($s) {self::$debug_url = $s;}
 
 	/**
 	 * Test URL that form is submitted to
