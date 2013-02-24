@@ -146,7 +146,10 @@ class AuthorizeDotNetPayment extends Payment {
 		$dataObject->company = "";
 		$dataObject->address = $billingAddress->Address." ".$billingAddress->Address2;
 		$dataObject->city = $billingAddress->City;
-		$dataObject->state = $billingAddress->Region;
+		$region = DataObject::get_by_id("EcommerceRegion", $billingAddress->RegionID);
+		if($region) {
+			$dataObject->state = $region->Code;
+		}
 		$dataObject->zip = $billingAddress->PostalCode;
 		$dataObject->country = $billingAddress->Country;
 		$dataObject->phone = $billingAddress->Phone;
@@ -158,7 +161,10 @@ class AuthorizeDotNetPayment extends Payment {
 		$dataObject->ship_to_company = "";
 		$dataObject->ship_to_address = $shippingAddress->ShippingAddress." ".$shippingAddress->ShippingAddress2;
 		$dataObject->ship_to_city = $shippingAddress->ShippingCity;
-		$dataObject->ship_to_state = $shippingAddress->ShippingRegion();
+		$region = DataObject::get_by_id("EcommerceRegion", $shippingAddress->ShippingRegionID);
+		if($region) {
+			$dataObject->ship_to_state = $region->Code;
+		}
 		$dataObject->ship_to_zip = $shippingAddress->ShippingPostalCode;
 		$dataObject->ship_to_country = $shippingAddress->ShippingCountry;
 		$dataObject->label = _t("AuthorizeDotNet.PAYNOW", "Pay now");
