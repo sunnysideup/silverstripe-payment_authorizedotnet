@@ -1,5 +1,5 @@
 {
-	"name": "silverstripe/payment_authorizedotnet",
+	"name": "sunnysideup/payment_authorizedotnet",
 	"type": "silverstripe-module",
 	"description": "pay using authorize.net",
 	"homepage": "http://www.silverstripe-ecommerce.com",
