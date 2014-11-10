@@ -1,0 +1,14 @@
+
+AuthorizeDotNetPayment:
+  ## MUST SET
+  api_login_id: ""
+  transaction_key: ""
+
+  ## MAKE IT NICER
+  privacy_link: ""
+  logo_link: ""
+
+  ## PROBABLY NOT NEEDED
+  md5_setting: ""
+
+

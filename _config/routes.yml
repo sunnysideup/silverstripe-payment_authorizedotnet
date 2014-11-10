@@ -1,0 +1,8 @@
+---
+Name: payment_authorizedotnet_routes
+After: '#modelascontrollerroutes'
+---
+Director:
+  rules:
+    'authorizedotnetpxpaypayment//$Action/$ID/$OtherID': 'AuthorizeDotNetPxPayPayment_Handler'
+
