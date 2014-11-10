@@ -3,7 +3,7 @@
 	"type": "silverstripe-module",
 	"description": "pay using authorize.net",
 	"homepage": "http://www.silverstripe-ecommerce.com",
-	"keywords": ["ecommerce", "e-commerce", "shop", "authorize dot net","authorize dotnet", "authorize","silverstripe"],
+	"keywords": ["ecommerce", "e-commerce", "shop", "authorize dot net","authorize dotnet", "authorize","silverstripe", "payment"],
 	"license": "Sunny Side Up (BSD-3-Clause and CUSTOM)",
 	"authors":[
 		{
@@ -14,8 +14,6 @@
 		}
 	],
 	"require":{
-		"php": ">=5.3.2",
-		"silverstripe/framework": "~2.4",
-		"sunnysideup/ecommerce": "~2.4"
+		"sunnysideup/ecommerce": "dev-master"
 	}
 }

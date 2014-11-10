@@ -1,82 +1,89 @@
 <?php
 
 /**
- *@author nicolaas[at]sunnysideup.co.nz
+ * This class provides an e-commerce payment gateway to the Authorize.net DPM method
+ * (note that there also seems to be SIM and AIM)
+ *
+ * @author nicolaas[at]sunnysideup.co.nz
  * visit https://developer.authorize.net/ and sign up for account to start testing
  * see: https://developer.authorize.net/guides/DPM/wwhelp/wwhimpl/js/html/wwhelp.htm
+        http://www.authorize.net/support/merchant/wwhelp/wwhimpl/js/html/wwhelp.htm
  *
- **/
+ */
 
-class AuthorizeDotNetPayment extends Payment {
+class AuthorizeDotNetPayment extends EcommercePayment {
 
 	/**
 	 * Standard SS variable
 	 * @var Array
 	 **/
-	static $db = array(
-		'ValuesSubmitted' => 'Text'
+	private static $db = array(
+		'ValuesSubmitted' => 'Text',
+		'Hash' => 'Varchar(255)',
+		'ValuesReceived' => 'Text'
 	);
 
+	/**
+	 * must be set - check for live vs test values
+	 * @var String
+	 **/
+	private static $api_login_id = 'YOUR_API_LOGIN_ID';
 
 	/**
 	 * must be set - check for live vs test values
 	 * @var String
 	 **/
-	protected static $api_login_id = 'YOUR_API_LOGIN_ID';
-		static function set_api_login_id($s) {self::$api_login_id = $s;}
+	private static $transaction_key = 'YOUR_TRANSACTION_KEY';
 
 	/**
-	 * must be set - check for live vs test values
+	 * Not sure if this is needed....
 	 * @var String
 	 **/
-	protected static $transaction_key = 'YOUR_TRANSACTION_KEY';
-		static function set_transaction_key($s) {self::$transaction_key = $s;}
-
-	/**
-	 * not used right now
-	 * @var String
-	 **/
-	protected static $md5_setting = 'bla';
-		static function set_md5_setting($s) {self::$md5_setting = $s;}
+	private static $md5_setting = '';
 
 	/**
 	 * we are not using any special variables here
 	 * @var String
 	 **/
-	protected static $show_form_type = 'PAYMENT_FORM';
-		static function set_show_form_type($s) {self::$show_form_type = $s;}
+	private static $show_form_type = 'PAYMENT_FORM';
 
 	/**
 	 * Test URL that form is submitted to
 	 * @var String
 	 **/
-	protected static $debug_url = 'https://developer.authorize.net/tools/paramdump/index.php';
-		static function set_debug_url($s) {self::$debug_url = $s;}
+	private static $debug_url = 'https://developer.authorize.net/tools/paramdump/index.php';
 
 	/**
 	 * Test URL that form is submitted to
 	 * @var String
 	 **/
-	protected static $test_url = 'https://test.authorize.net/gateway/transact.dll';
-		static function set_test_url($s) {self::$test_url = $s;}
+	private static $test_url = 'https://test.authorize.net/gateway/transact.dll';
 
 	/**
 	 * Test URL that form is submitted to
 	 * @var String
 	 **/
-	protected static $live_url = 'https://secure.authorize.net/gateway/transact.dll';
-		static function set_live_url($s) {self::$live_url = $s;}
+	private static $live_url = 'https://secure.authorize.net/gateway/transact.dll';
+
 
 	/**
-	 * Not used right now
+	 * Link to information about privacy
 	 * @var String
 	 **/
-	protected $currency = "";
-		function setCurrency($s) {$this->currency = $s;}
+	private static $privacy_link = '';
 
-	protected static $privacy_link = '';
 
-	protected static $logo = '';
+	/**
+	 * Link to Authorize.net logo
+	 * @var String
+	 **/
+	private static $logo_link = '';
+
+	/**
+	 *
+	 * @var boolean
+	 */
+	protected $debug = true;
 
 	function getCMSFields() {
 		$fields = parent::getCMSFields();
@@ -84,11 +91,28 @@ class AuthorizeDotNetPayment extends Payment {
 		return $fields;
 	}
 
+	/**
+	 * fields for the final step of the checkout out process...
+	 * @return FieldList
+	 */
 	function getPaymentFormFields() {
-		$logo = '<img src="' . self::$logo . '" alt="Credit card payments powered by AuthorizeDotNet"/>';
-		$privacyLink = '<a href="' . self::$privacy_link . '" target="_blank" title="Read AuthorizeDotNet\'s privacy policy">' . $logo . '</a><br/>';
-		$fields = new FieldSet(
-			new LiteralField('AuthorizeDotNetInfo', $privacyLink)
+		$logoLink = $this->Config()->get("logo_link");
+		$logo = "";
+		if($logoLink) {
+			$logo = '<img src="' . $logoLink . '" alt="Credit card payments powered by Authorize.Net"/>';
+		}
+		$privacyLink = $this->Config()->get("privacy_link");
+		$privacy = "";
+		if($privacyLink) {
+			if($logo) {
+				$privacy = '<a href="' . $privacyLink . '" target="_blank" title="Read AuthorizeDotNet\'s privacy policy">' . $logo . '</a>';
+			}
+			else {
+				$privacy = '<a href="' . $privacyLink . '" target="_blank" title="Read AuthorizeDotNet\'s privacy policy">Powered by Authorize . net</a>';
+			}
+		}
+		$fields = new FieldList(
+			new LiteralField('AuthorizeDotNetInfo', $privacy)
 		);
 		return $fields;
 	}
@@ -98,6 +122,7 @@ class AuthorizeDotNetPayment extends Payment {
 	}
 
 	function processPayment($data, $form) {
+		require_once(__DIR__."/../thirdparty/authorizenet/autoload.php");
 		$amount = 0;
 		$member = null;
 		$billingAddress = null;
@@ -107,87 +132,102 @@ class AuthorizeDotNetPayment extends Payment {
 			$billingAddress = $order->BillingAddress();
 			$shippingAddress = $order->ShippingAddress();
 			$orderID = $order->ID;
-			$amount = $order->TotalOutstanding();
+			$amount = number_format($this->getAmountValue(), 2, '.', '');;
+			$currency = $this->getAmountCurrency();
 			if($member = $order->Member()) {
 				$email = $member->Email;
 			}
 		}
-		else {
-			$order = new DataObject();
-			$billingAddress = new DataObject();
-			$shippingAddress = new DataObject();
-			$order->ID = time();
-			$amount = floatval($data["Amount"]);
-			if($member = Member::CurrentMember()) {
-				$member->Email;
-			}
-			else {
-				$member = new DataObject();
-				if(isset($data["Email"])) {$member->Email = $data["Email"];}
-			}
-		}
+		$this->write();
 		$timeStamp = time();
-		$fingerprint = hash_hmac("md5", self::$api_login_id  . "^" . $order->ID . "^" . $timeStamp . "^" . $amount . "^", self::$transaction_key);
-		$dataObject = new DataObject();
-		$dataObject->url = $this->isLiveMode() ? self::$live_url : self::$test_url;
-		$dataObject->fingerprint = $fingerprint;
-		$dataObject->login = self::$api_login_id;;
-		$dataObject->amount = $amount;
-		$dataObject->fp_sequence = $order->ID;
-		$dataObject->fp_timeStamp = $timeStamp;
-		$dataObject->fp_hash = $fingerprint;
-		$dataObject->test_request = ($this->isLiveMode() ? "false" : "true");
-		$dataObject->show_form = self::$show_form_type;
-		$dataObject->recurring_billing = "false";
-		$dataObject->invoice_num = $order->ID;
-		$dataObject->description =  $order->Title();
-		$dataObject->first_name = $billingAddress->FirstName;
-		$dataObject->last_name = $billingAddress->Surname;
-		$dataObject->company = "";
-		$dataObject->address = $billingAddress->Address." ".$billingAddress->Address2;
-		$dataObject->city = $billingAddress->City;
-		$region = DataObject::get_by_id("EcommerceRegion", $billingAddress->RegionID);
+		$fingerprint = AuthorizeNetSIM_Form::getFingerprint(
+			$this->Config()->get("api_login_id") ,
+			$this->Config()->get("transaction_key") ,
+			$this->ID,
+			$amount,
+			$timeStamp
+		);
+		$this->Hash = $fingerprint;
+		$this->write();
+		//start creating object and end with
+		$obj = new stdClass();
+		$obj->fields = array();
+		$obj->label = _t("AuthorizeDotNet.PAYNOW", "Pay now");
+		$obj->fingerprint = $fingerprint;
+		//IMPORTANT!
+		$obj->fields["x_invoice_num"] = $this->ID;
+		$obj->fields["x_fingerprint"] = $fingerprint;
+		//all the other stuff...
+		$obj->fields["x_login"] = $this->Config()->get("api_login_id");
+		$obj->fields["x_amount"] = $amount;
+		//$obj->fields["x_currency_code"] = $currency;
+		$obj->fields["x_fp_sequence"] = $order->ID;
+		$obj->fields["x_fp_timeStamp"] = $timeStamp;
+		$obj->fields["x_fp_hash"] = $fingerprint;
+		$obj->fields["x_test_request"] = ($this->isLiveMode() ? "false" : "true");
+		$obj->fields["x_show_form"] = $this->Config()->get("show_form_type");
+		$obj->fields["x_recurring_billing"] = "false";
+		$obj->fields["x_description"] =  $order->Title();
+		$obj->fields["x_first_name"] = $billingAddress->FirstName;
+		$obj->fields["x_last_name"] = $billingAddress->Surname;
+		$obj->fields["x_company"] = "";
+		$obj->fields["x_address"] = $billingAddress->Address." ".$billingAddress->Address2;
+		$obj->fields["x_city"] = $billingAddress->City;
+		$region =  EcommerceRegion::get()->byID($billingAddress->RegionID);
 		if($region) {
-			$dataObject->state = $region->Code;
+			$obj->fields["x_state"] = $region->Code;
 		}
-		$dataObject->zip = $billingAddress->PostalCode;
-		$dataObject->country = $billingAddress->Country;
-		$dataObject->phone = $billingAddress->Phone;
-		$dataObject->fax = "";
-		$dataObject->email = $member->Email;
-		$dataObject->cust_id = $member->ID;
-		$dataObject->ship_to_first_name = $shippingAddress->ShippingFirstName;
-		$dataObject->ship_to_last_name = $shippingAddress->ShippingSurname;
-		$dataObject->ship_to_company = "";
-		$dataObject->ship_to_address = $shippingAddress->ShippingAddress." ".$shippingAddress->ShippingAddress2;
-		$dataObject->ship_to_city = $shippingAddress->ShippingCity;
-		$region = DataObject::get_by_id("EcommerceRegion", $shippingAddress->ShippingRegionID);
+		$obj->fields["x_zip"] = $billingAddress->PostalCode;
+		$obj->fields["x_country"] = $billingAddress->Country;
+		$obj->fields["x_phone"] = $billingAddress->Phone;
+		$obj->fields["x_fax"] = "";
+		$obj->fields["x_email"] = $member->Email;
+		$obj->fields["x_cust_id"] = $member->ID;
+		$obj->fields["x_ship_to_first_name"] = $shippingAddress->ShippingFirstName;
+		$obj->fields["x_ship_to_last_name"] = $shippingAddress->ShippingSurname;
+		$obj->fields["x_ship_to_company"] = "";
+		$obj->fields["x_ship_to_address"] = $shippingAddress->ShippingAddress." ".$shippingAddress->ShippingAddress2;
+		$obj->fields["x_ship_to_city"] = $shippingAddress->ShippingCity;
+		$region =  EcommerceRegion::get()->byID($shippingAddress->ShippingRegionID);
 		if($region) {
-			$dataObject->ship_to_state = $region->Code;
+			$obj->fields["x_ship_to_state"] = $region->Code;
 		}
-		$dataObject->ship_to_zip = $shippingAddress->ShippingPostalCode;
-		$dataObject->ship_to_country = $shippingAddress->ShippingCountry;
-		$dataObject->label = _t("AuthorizeDotNet.PAYNOW", "Pay now");
-		return $this->executeURL($dataObject);
+		$obj->fields["x_ship_to_zip"] = $shippingAddress->ShippingPostalCode;
+		$obj->fields["x_ship_to_country"] = $shippingAddress->ShippingCountry;
+
+		$this->ValuesSubmitted = serialize($obj);
+		$this->write();
+		return $this->executeURL($obj);
 	}
 
-	protected function executeURL($dataObject) {
+
+	/**
+	 * executes payment: redirects to Authorize.net
+	 *
+	 * @param Object $obj
+	 *
+	 */
+	protected function executeURL($obj) {
 		Requirements::clear();
 		Requirements::javascript(THIRDPARTY_DIR."/jquery/jquery.js");
 		$page = new Page();
-		if($dataObject->fingerprint) {
+		if($obj->fingerprint) {
 			$page->Title = 'Redirection to Authorize.Net...';
-			$page->Logo = '<img src="' . self::$logo . '" alt="Payments powered by AuthorizeDotNet"/>';
-			$page->Form = $this->AuthorizeDotNetForm($dataObject);
+			$logoLink = $this->Config()->get("logo_link");
+			$page->Logo = "";
+			if($logoLink) {
+				$page->Logo = '<img src="' . $logoLink . '" alt="Payments powered by Authorize.Net" />';
+			}
+			$page->Form = $this->AuthorizeDotNetForm($obj);
 			$controller = new ContentController($page);
 			//Requirements::block(THIRDPARTY_DIR."/jquery/jquery.js");
 			//Requirements::javascript(Director::protocol()."ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js");
 			return new Payment_Processing($controller->renderWith('PaymentProcessingPage'));
 		}
 		else {
-			$page->Title = 'Sorry, AuthorizeDotNet can not be contacted at the moment ...';
+			$page->Title = 'Sorry, Authorize.Net can not be contacted at the moment ...';
 			$page->Logo = '';
-			$page->Form = 'Sorry, an error has occured in contacting the Payment Processing Provider, please try again in a few minutes...';
+			$page->Form = 'Sorry, an error has occurred in contacting the Payment Processing Provider (Authorize.Net), please try again in a few minutes or contact the website provider...';
 			$controller = new ContentController($page);
 			//Requirements::block(THIRDPARTY_DIR."/jquery/jquery.js");
 			//Requirements::javascript(Director::protocol()."ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js");
@@ -195,40 +235,35 @@ class AuthorizeDotNetPayment extends Payment {
 		}
 	}
 
-	protected function AuthorizeDotNetForm($dataObject) {
-		return <<<HTML
-			<form id="PaymentFormAuthorizeDotNet" method="post" action="$dataObject->url">
-				<input type='hidden' name='x_login' value='$dataObject->login' />
-				<input type='hidden' name='x_amount' value='$dataObject->amount' />
-				<input type='hidden' name='x_description' value='$dataObject->description' />
-				<input type='hidden' name='x_invoice_num' value='$dataObject->invoice_num' />
-				<input type='hidden' name='x_fp_sequence' value='$dataObject->fp_sequence' />
-				<input type='hidden' name='x_fp_timestamp' value='$dataObject->fp_timeStamp' />
-				<input type='hidden' name='x_fp_hash' value='$dataObject->fp_hash' />
-				<input type='hidden' name='x_test_request' value='$dataObject->test_request' />
-				<input type='hidden' name='x_show_form' value='PAYMENT_FORM' />
-				<input type='hidden' name='x_recurring_billing' value='$dataObject->recurring_billing' />
-				<input type='hidden' name='x_first_name' value='$dataObject->first_name' />
-				<input type='hidden' name='x_last_name' value='$dataObject->last_name' />
-				<input type='hidden' name='x_company' value='$dataObject->company' />
-				<input type='hidden' name='x_address' value='$dataObject->address' />
-				<input type='hidden' name='x_city' value='$dataObject->city' />
-				<input type='hidden' name='x_state' value='$dataObject->state' />
-				<input type='hidden' name='x_zip' value='$dataObject->zip' />
-				<input type='hidden' name='x_country' value='$dataObject->country' />
-				<input type='hidden' name='x_phone' value='$dataObject->phone' />
-				<input type='hidden' name='x_fax' value='$dataObject->fax' />
-				<input type='hidden' name='x_email' value='$dataObject->email' />
-				<input type='hidden' name='x_cust_id' value='$dataObject->cust_id' />
-				<input type='hidden' name='x_ship_to_first_name' value='$dataObject->ship_to_first_name' />
-				<input type='hidden' name='x_ship_to_last_name' value='$dataObject->ship_to_last_name' />
-				<input type='hidden' name='x_ship_to_company' value='$dataObject->ship_to_company' />
-				<input type='hidden' name='x_ship_to_address' value='$dataObject->ship_to_address' />
-				<input type='hidden' name='x_ship_to_city' value='$dataObject->ship_to_city' />
-				<input type='hidden' name='x_ship_to_state' value='$dataObject->ship_to_state' />
-				<input type='hidden' name='x_ship_to_zip' value='$dataObject->ship_to_zip' />
-				<input type='hidden' name='x_ship_to_country' value='$dataObject->ship_to_country' />
-				<input type='submit' value='$dataObject->label' />
+	/**
+	 * turns an object into HTML.
+	 *
+	 * @param Object $obj
+	 *
+	 * @return String (html)
+	 */
+	protected function AuthorizeDotNetForm($obj) {
+		$obj->ActionURL = $this->isLiveMode() ? self::$live_url : self::$test_url;
+		if($this->debug) {
+			$obj->ActionURL = self::$debug_url;
+		}
+		$html = '
+			<form id="PaymentFormAuthorizeDotNet" method="post" action="'.$obj->ActionURL.'">';
+		$form = new AuthorizeNetSIM_Form($obj->fields);
+		$html .= $form->getHiddenFieldString();
+		//foreach($obj->fields as $field => $value) {
+			//$html .= '
+				//<input type="hidden" name="'.$field.'" value="'.Convert::raw2att($value).'" />';
+		//}
+		if($this->debug) {
+			$obj->fields["transaction_key"] = $this->Config()->get("transaction_key");
+			foreach($obj->fields as $field => $value) {
+				$html .= '
+					'.$field.' = '.$value.'<br />';
+			}
+		}
+		$html .='
+				<input type="submit" value="'.$obj->label.'" />
 			</form>
 			<script type="text/javascript">
 				jQuery(document).ready(function() {
@@ -236,8 +271,8 @@ class AuthorizeDotNetPayment extends Payment {
 						//jQuery("#PaymentFormAuthorizeDotNet").submit();
 					}
 				});
-			</script>
-HTML;
+			</script>';
+		return $html;
 	}
 
 	protected function isLiveMode(){
@@ -248,36 +283,74 @@ HTML;
 
 class AuthorizeDotNetPxPayPayment_Handler extends Controller {
 
-	protected static $url_segment = 'authorizedotnetpxpaypayment';
-		static function set_url_segment($v) { self::$url_segment = $v;}
-		static function get_url_segment() { return self::$url_segment;}
+	private static $allowed_actions = array(
+		"paid"
+	);
 
-	static function complete_link() {
-		return self::$url_segment . '/paid/';
+	/**
+	 * make sure that this value is the same as the one set in the route
+	 * yml config file!
+	 *
+	 * @var String
+	 *
+	 */
+	private static $url_segment = 'authorizedotnetpxpaypayment';
+
+	/**
+	 * returns relative or absolute link to payment handler
+	 * @param Boolean $absolute
+	 * @return String
+	 */
+	public static function complete_link($absolute = false) {
+		$link = Config::inst()->get("AuthorizeDotNetPxPayPayment_Handler", "url_segment") . '/paid/';
+		if($absolute) {
+			$link = Director::AbsoluteURL($link);
+		}
+		return $link;
 	}
 
-	static function absolute_complete_link() {
-		return Director::AbsoluteURL(self::complete_link());
-	}
+	/**
+	 * confirm payment...
+	 */
+	public function paid() {
+		require_once(__DIR__."/../thirdparty/authorizenet/autoload.php");
+		$response = new AuthorizeNetSIM(
+			Config::inst()->get("AuthorizeDotNetPayment", "api_login_id"),
+			Config::inst()->get("AuthorizeDotNetPayment", "md5_setting")
+		);
+		if($response) {
+			//check if it is authorize.net response
+			if($response->isAuthorizeNet()) {
+				//find payment
+				$payment = AuthorizeDotNetPxPayPayment::get()->byID(intval($response->invoice_number));
+				if($payment) {
+					$payment->ValuesReceived = serialize($response);
 
-	function paid() {
-		$commsObject = new AuthorizeDotNetPxPayComs();
-		$response = $commsObject->processRequestAndReturnResultsAsObject();
-		if($payment = DataObject::get_by_id('AuthorizeDotNetPxPayPayment', $response->getMerchantReference())) {
-			if(1 == $response->getSuccess()) {
-				$payment->Status = 'Success';
+					//compare hash
+					if($payment->Hash == $response->md5_hash) {
+						//now we know it is legit, lets see the response...
+						if($response->approved) {
+							$payment->Status = 'Success';
+							$payment->write();
+						}
+						elseif($response->held) {
+							$payment->Status = 'Pending';
+							$payment->write();
+						}
+						else {
+							$payment->Status = 'Failure';
+							$payment->write();
+						}
+					}
+					else {
+						$payment->Status = 'Failure';
+						$payment->write();
+					}
+					return $payment->redirectToOrder();
+				}
 			}
-			else {
-				$payment->Status = 'Failure';
-			}
-			if($AuthorizeDotNetTxnRef = $response->getAuthorizeDotNetTxnRef()) $payment->TxnRef = $AuthorizeDotNetTxnRef;
-			if($ResponseText = $response->getResponseText()) $payment->Message = $ResponseText;
-			$payment->write();
-			$payment->redirectToOrder();
 		}
-		else {
-			USER_ERROR("could not find payment with matching ID", E_USER_WARNING);
-		}
+		USER_ERROR("Could not find payment with matching ID", E_USER_WARNING);
 		return;
 	}
 
