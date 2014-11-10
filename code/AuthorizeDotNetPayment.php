@@ -6,8 +6,12 @@
  *
  * @author nicolaas[at]sunnysideup.co.nz
  * visit https://developer.authorize.net/ and sign up for account to start testing
- * see: https://developer.authorize.net/guides/DPM/wwhelp/wwhimpl/js/html/wwhelp.htm
-        http://www.authorize.net/support/merchant/wwhelp/wwhimpl/js/html/wwhelp.htm
+ * @see:
+ * https://developer.authorize.net/guides/DPM/wwhelp/wwhimpl/js/html/wwhelp.htm
+ * https://developer.authorize.net/tools/responsecode99/
+ * http://www.authorize.net/support/merchant/wwhelp/wwhimpl/js/html/wwhelp.htm
+ * https://developer.authorize.net/tools/responsecode97/
+ * https://developer.authorize.net/tools/
  *
  */
 
@@ -161,8 +165,8 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 		$obj->fields["x_login"] = $this->Config()->get("api_login_id");
 		$obj->fields["x_amount"] = $amount;
 		//$obj->fields["x_currency_code"] = $currency;
-		$obj->fields["x_fp_sequence"] = $order->ID;
-		$obj->fields["x_fp_timeStamp"] = $timeStamp;
+		$obj->fields["x_fp_sequence"] = $this->ID;
+		$obj->fields["x_fp_timestamp"] = $timeStamp;
 		$obj->fields["x_fp_hash"] = $fingerprint;
 		$obj->fields["x_test_request"] = ($this->isLiveMode() ? "false" : "true");
 		$obj->fields["x_show_form"] = $this->Config()->get("show_form_type");
@@ -194,6 +198,9 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 		}
 		$obj->fields["x_ship_to_zip"] = $shippingAddress->ShippingPostalCode;
 		$obj->fields["x_ship_to_country"] = $shippingAddress->ShippingCountry;
+		$obj->fields["x_receipt_link_method"] = "POST";
+		$obj->fields["x_receipt_link_text"] = _t("AuthorizeDotNet.FINALISE", "Finalise now");
+		$obj->fields["x_receipt_link_url"] = AuthorizeDotNetPxPayPayment_Handler::complete_link(true);
 
 		$this->ValuesSubmitted = serialize($obj);
 		$this->write();
