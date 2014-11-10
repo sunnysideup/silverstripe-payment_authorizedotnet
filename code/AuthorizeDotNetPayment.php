@@ -85,6 +85,21 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 
 	/**
 	 *
+	 * @param Int $timeStamp
+	 * @param String $amount - needs to be formatted at 11.00 (two digits)
+	 *
+	 * @return String
+	 */
+	public static function create_fingerprint($myID, $timeStamp, $amount){
+		$string = Config::inst()->get("AuthorizeDotNetPayment", "api_login_id") . "^" . $myID . "^" . $timeStamp . "^" . $amount . "^";
+		$key = Config::inst()->get("AuthorizeDotNetPayment", "transaction_key");
+		$fingerprint = hash_hmac("md5",$string, $key);
+		//debug::log($string."---".$key."---".$fingerprint);
+		return $fingerprint;
+	}
+
+	/**
+	 *
 	 * @var boolean
 	 */
 	protected $debug = false;
@@ -126,7 +141,6 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 	}
 
 	function processPayment($data, $form) {
-		require_once(__DIR__."/../thirdparty/authorizenet/autoload.php");
 		$amount = 0;
 		$member = null;
 		$billingAddress = null;
@@ -144,30 +158,14 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 		}
 		$this->write();
 		$timeStamp = time();
-		$fingerprint1 = AuthorizeNetSIM_Form::getFingerprint(
-			$this->Config()->get("api_login_id") ,
-			$this->Config()->get("transaction_key") ,
-			$this->ID,
-			$amount,
-			$timeStamp
-		);
-
-		$string = $this->Config()->get("api_login_id") . "^" . $this->ID . "^" . $timeStamp . "^" . $amount . "^";
-		$key = $this->Config()->get("transaction_key");
-		$fingerprint2 = hash_hmac("md5",$string, $key);
-		if($this->debug) {
-			debug::log("STRING: ".$string);
-			debug::log("KEY: ".$key);
-			debug::log("FP1: ".$fingerprint1);
-			debug::log("FP2: ".$fingerprint2);
-		}
-		$this->Hash = $fingerprint2;
+		$fingerprint = self::create_fingerprint($this->ID, $timeStamp, $amount);
+		$this->Hash = $fingerprint;
 		$this->write();
 		//start creating object and end with
 		$obj = new stdClass();
 		$obj->fields = array();
 		$obj->label = _t("AuthorizeDotNet.PAYNOW", "Pay now");
-		$obj->fingerprint = $fingerprint2;
+		$obj->fingerprint = $fingerprint;
 		//IMPORTANT!
 		$obj->fields["x_invoice_num"] = $this->ID;
 		//all the other stuff...
@@ -176,7 +174,7 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 		//$obj->fields["x_currency_code"] = $currency;
 		$obj->fields["x_fp_sequence"] = $this->ID;
 		$obj->fields["x_fp_timestamp"] = $timeStamp;
-		$obj->fields["x_fp_hash"] = $fingerprint2;
+		$obj->fields["x_fp_hash"] = $fingerprint;
 		$obj->fields["x_test_request"] = ($this->isLiveMode() ? "false" : "true");
 		$obj->fields["x_show_form"] = $this->Config()->get("show_form_type");
 		$obj->fields["x_recurring_billing"] = "false";
@@ -209,7 +207,7 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 		$obj->fields["x_ship_to_country"] = $shippingAddress->ShippingCountry;
 		$obj->fields["x_receipt_link_method"] = "POST";
 		$obj->fields["x_receipt_link_text"] = _t("AuthorizeDotNet.FINALISE", "Finalise now");
-		$obj->fields["x_receipt_link_url"] = AuthorizeDotNetPxPayPayment_Handler::complete_link(true);
+		$obj->fields["x_receipt_link_url"] = AuthorizeDotNetPxPayPayment_Handler::complete_link($timeStamp, true);
 
 		$this->ValuesSubmitted = serialize($obj);
 		$this->write();
@@ -265,12 +263,10 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 		}
 		$html = '
 			<form id="PaymentFormAuthorizeDotNet" method="post" action="'.$obj->ActionURL.'">';
-		$form = new AuthorizeNetSIM_Form($obj->fields);
-		$html .= $form->getHiddenFieldString();
-		//foreach($obj->fields as $field => $value) {
-			//$html .= '
-				//<input type="hidden" name="'.$field.'" value="'.Convert::raw2att($value).'" />';
-		//}
+		foreach($obj->fields as $field => $value) {
+			$html .= '
+				<input type="hidden" name="'.$field.'" value="'.Convert::raw2att($value).'" />';
+		}
 		if($this->debug) {
 			$obj->fields["transaction_key"] = $this->Config()->get("transaction_key");
 			foreach($obj->fields as $field => $value) {
@@ -299,6 +295,11 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 
 class AuthorizeDotNetPxPayPayment_Handler extends Controller {
 
+	private static $response_approved = 1;
+	private static $response_declined = 2;
+	private static $response_error = 3;
+	private static $response_held = 4;
+
 	private static $allowed_actions = array(
 		"paid"
 	);
@@ -317,8 +318,8 @@ class AuthorizeDotNetPxPayPayment_Handler extends Controller {
 	 * @param Boolean $absolute
 	 * @return String
 	 */
-	public static function complete_link($absolute = false) {
-		$link = Config::inst()->get("AuthorizeDotNetPxPayPayment_Handler", "url_segment") . '/paid/';
+	public static function complete_link($timeStamp, $absolute = false) {
+		$link = Config::inst()->get("AuthorizeDotNetPxPayPayment_Handler", "url_segment") . '/paid/'.$timeStamp."/";
 		if($absolute) {
 			$link = Director::AbsoluteURL($link);
 		}
@@ -327,47 +328,55 @@ class AuthorizeDotNetPxPayPayment_Handler extends Controller {
 
 	/**
 	 * confirm payment...
+	 * @param HTTP_Request (SS_HTTPRequest)
 	 */
-	public function paid() {
-		require_once(__DIR__."/../thirdparty/authorizenet/autoload.php");
-		$response = new AuthorizeNetSIM(
-			Config::inst()->get("AuthorizeDotNetPayment", "api_login_id"),
-			Config::inst()->get("AuthorizeDotNetPayment", "md5_setting")
-		);
-		if($response) {
-			//check if it is authorize.net response
-			if($response->isAuthorizeNet()) {
-				//find payment
-				$payment = AuthorizeDotNetPxPayPayment::get()->byID(intval($response->invoice_number));
-				if($payment) {
-					$payment->ValuesReceived = serialize($response);
-
-					//compare hash
-					if($payment->Hash == $response->md5_hash) {
-						//now we know it is legit, lets see the response...
-						if($response->approved) {
-							$payment->Status = 'Success';
-							$payment->write();
-						}
-						elseif($response->held) {
-							$payment->Status = 'Pending';
-							$payment->write();
-						}
-						else {
-							$payment->Status = 'Failure';
-							$payment->write();
-						}
+	public function paid($request) {
+		$timeStamp = $request->param("ID");
+		if($timeStamp) {
+			//find payment
+			$payment = AuthorizeDotNetPayment::get()->byID(intval($_POST["x_invoice_num"]));
+			if($payment){
+				$payment->ValuesReceived = Convert::raw2sql(serialize($_POST));
+				//already completed?
+				if($payment->Status != "Incomplete") {
+					return $payment->redirectToOrder();
+				}
+				//get amount ...
+				if(isset($_REQUEST["x_amount"])) {
+					$amount = $_REQUEST["x_amount"];
+				}
+				else {
+					$amount = "0.00";
+				}
+				//check if it is authorize.net response
+				$checkHash = AuthorizeDotNetPayment::create_fingerprint($payment->ID, trim($timeStamp), $amount);
+				if($payment->Hash == $checkHash) {
+					$payment->Hash = "";
+					//now we know it is legit, lets see the response...
+					$responseCode = $_POST["x_response_code"];
+					if($responseCode == self::$response_approved) {
+						$payment->Status = 'Success';
+					}
+					elseif($responseCode == self::$response_held) {
+						$payment->Status = 'Pending';
 					}
 					else {
 						$payment->Status = 'Failure';
-						$payment->write();
 					}
-					return $payment->redirectToOrder();
 				}
+				else {
+					$payment->Status = 'Failure';
+				}
+				$payment->write();
+				return $payment->redirectToOrder();
+			}
+			else {
+				USER_ERROR("PAYMENT COULD NOT BE FOUND ", E_USER_WARNING);
 			}
 		}
-		USER_ERROR("Could not find payment with matching ID", E_USER_WARNING);
-		return;
+		else {
+			USER_ERROR("URL IS MISSING TIMESTAMP OF TRANSACTION", E_USER_WARNING);
+		}
 	}
 
 
