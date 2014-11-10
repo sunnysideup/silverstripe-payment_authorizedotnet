@@ -87,7 +87,7 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 	 *
 	 * @var boolean
 	 */
-	protected $debug = true;
+	protected $debug = false;
 
 	function getCMSFields() {
 		$fields = parent::getCMSFields();
