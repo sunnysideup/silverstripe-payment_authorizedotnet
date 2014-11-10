@@ -136,7 +136,7 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 			$billingAddress = $order->BillingAddress();
 			$shippingAddress = $order->ShippingAddress();
 			$orderID = $order->ID;
-			$amount = number_format($this->getAmountValue(), 2, '.', '');;
+			$amount = number_format($this->getAmountValue(), 2, '.', '');
 			$currency = $this->getAmountCurrency();
 			if($member = $order->Member()) {
 				$email = $member->Email;
@@ -144,30 +144,39 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 		}
 		$this->write();
 		$timeStamp = time();
-		$fingerprint = AuthorizeNetSIM_Form::getFingerprint(
+		$fingerprint1 = AuthorizeNetSIM_Form::getFingerprint(
 			$this->Config()->get("api_login_id") ,
 			$this->Config()->get("transaction_key") ,
 			$this->ID,
 			$amount,
 			$timeStamp
 		);
-		$this->Hash = $fingerprint;
+
+		$string = $this->Config()->get("api_login_id") . "^" . $this->ID . "^" . $timeStamp . "^" . $amount . "^";
+		$key = $this->Config()->get("transaction_key");
+		$fingerprint2 = hash_hmac("md5",$string, $key);
+		if($this->debug) {
+			debug::log("STRING: ".$string);
+			debug::log("KEY: ".$key);
+			debug::log("FP1: ".$fingerprint1);
+			debug::log("FP2: ".$fingerprint2);
+		}
+		$this->Hash = $fingerprint2;
 		$this->write();
 		//start creating object and end with
 		$obj = new stdClass();
 		$obj->fields = array();
 		$obj->label = _t("AuthorizeDotNet.PAYNOW", "Pay now");
-		$obj->fingerprint = $fingerprint;
+		$obj->fingerprint = $fingerprint2;
 		//IMPORTANT!
 		$obj->fields["x_invoice_num"] = $this->ID;
-		$obj->fields["x_fingerprint"] = $fingerprint;
 		//all the other stuff...
 		$obj->fields["x_login"] = $this->Config()->get("api_login_id");
 		$obj->fields["x_amount"] = $amount;
 		//$obj->fields["x_currency_code"] = $currency;
 		$obj->fields["x_fp_sequence"] = $this->ID;
 		$obj->fields["x_fp_timestamp"] = $timeStamp;
-		$obj->fields["x_fp_hash"] = $fingerprint;
+		$obj->fields["x_fp_hash"] = $fingerprint2;
 		$obj->fields["x_test_request"] = ($this->isLiveMode() ? "false" : "true");
 		$obj->fields["x_show_form"] = $this->Config()->get("show_form_type");
 		$obj->fields["x_recurring_billing"] = "false";
