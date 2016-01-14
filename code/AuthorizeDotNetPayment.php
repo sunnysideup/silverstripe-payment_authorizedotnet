@@ -245,7 +245,7 @@ class AuthorizeDotNetPayment extends EcommercePayment {
 			$controller = new ContentController($page);
 			//Requirements::block(THIRDPARTY_DIR."/jquery/jquery.js");
 			//Requirements::javascript(Director::protocol()."ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js");
-			return new Payment_Failure($controller->renderWith('PaymentProcessingPage'));
+			return EcommercePayment_Failure::create($controller->renderWith('PaymentProcessingPage'));
 		}
 	}
 
