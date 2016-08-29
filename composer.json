@@ -1,19 +1,26 @@
 {
-	"name": "sunnysideup/payment_authorizedotnet",
-	"type": "silverstripe-module",
-	"description": "pay using authorize.net",
-	"homepage": "http://www.silverstripe-ecommerce.com",
-	"keywords": ["ecommerce", "e-commerce", "shop", "authorize dot net","authorize dotnet", "authorize","silverstripe", "payment"],
-	"license": "Sunny Side Up (BSD-3-Clause and CUSTOM)",
-	"authors":[
-		{
-			"name": "Nicolaas Francken",
-			"homepage": "https://github.com/sunnysideup",
-			"email" : "modules@sunnysideup.co.nz",
-			"role" : "lead developer"
-		}
-	],
-	"require":{
-		"sunnysideup/ecommerce": "dev-master"
-	}
+    "name": "sunnysideup/payment_authorizedotnet",
+    "type": "silverstripe-module",
+    "description": "pay using authorize.net",
+    "keywords": [
+        "ecommerce",
+        "e-commerce",
+        "shop",
+        "authorize dot net",
+        "authorize dotnet",
+        "authorize",
+        "silverstripe",
+        "payment"
+    ],
+    "license": "Sunny Side Up (BSD-3-Clause and CUSTOM)",
+    "authors": [
+        {
+            "name": "Nicolaas Francken",
+            "email": "modules@sunnysideup.co.nz",
+            "role": "lead developer"
+        }
+    ],
+    "require": {
+        "sunnysideup/ecommerce": "dev-master"
+    }
 }
