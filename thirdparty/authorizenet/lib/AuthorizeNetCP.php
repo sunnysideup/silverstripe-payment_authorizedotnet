@@ -17,17 +17,16 @@
  */
 class AuthorizeNetCP extends AuthorizeNetAIM
 {
-    
     const LIVE_URL = 'https://cardpresent.authorize.net/gateway/transact.dll';
     
-    public $verify_x_fields = false; 
+    public $verify_x_fields = false;
     
     /**
-     * Holds all the x_* name/values that will be posted in the request. 
+     * Holds all the x_* name/values that will be posted in the request.
      * Default values are provided for best practice fields.
      */
     protected $_x_post_fields = array(
-        "cpversion" => "1.0", 
+        "cpversion" => "1.0",
         "delim_char" => ",",
         "encap_char" => "|",
         "market_type" => "2",
@@ -48,21 +47,22 @@ class AuthorizeNetCP extends AuthorizeNetAIM
      * 10 = Virtual Terminal
      */
     
-	/**
+    /**
      * Only used if merchant wants to send custom fields.
      */
     private $_custom_fields = array();
-	
+    
     /**
      * Strip sentinels and set track1 field.
      *
      * @param  string $track1data
      */
-    public function setTrack1Data($track1data) {
+    public function setTrack1Data($track1data)
+    {
         if (preg_match('/^%.*\?$/', $track1data)) {
             $this->track1 = substr($track1data, 1, -1);
         } else {
-            $this->track1 = $track1data;    
+            $this->track1 = $track1data;
         }
     }
     
@@ -71,11 +71,12 @@ class AuthorizeNetCP extends AuthorizeNetAIM
      *
      * @param  string $track2data
      */
-    public function setTrack2Data($track2data) {
+    public function setTrack2Data($track2data)
+    {
         if (preg_match('/^;.*\?$/', $track2data)) {
             $this->track2 = substr($track2data, 1, -1);
         } else {
-            $this->track2 = $track2data;    
+            $this->track2 = $track2data;
         }
     }
     
@@ -83,14 +84,13 @@ class AuthorizeNetCP extends AuthorizeNetAIM
      *
      *
      * @param string $response
-     * 
+     *
      * @return AuthorizeNetAIM_Response
      */
     protected function _handleResponse($response)
     {
         return new AuthorizeNetCP_Response($response, $this->_x_post_fields['delim_char'], $this->_x_post_fields['encap_char'], $this->_custom_fields);
     }
-    
 }
 
 
@@ -118,10 +118,9 @@ class AuthorizeNetCP_Response extends AuthorizeNetResponse
             
             // If it's an XML response
             if (substr($response, 0, 5) == "<?xml") {
-                
                 $this->xml = @simplexml_load_string($response);
                 // Set all fields
-                $this->version              = array_pop(array_slice(explode('"', $response), 1,1));
+                $this->version              = array_pop(array_slice(explode('"', $response), 1, 1));
                 $this->response_code        = (string)$this->xml->ResponseCode;
                 
                 if ($this->response_code == 1) {
@@ -142,10 +141,8 @@ class AuthorizeNetCP_Response extends AuthorizeNetResponse
                 $this->card_type            = (string)$this->xml->AccountType;
                 $this->test_mode            = (string)$this->xml->TestMode;
                 $this->ref_trans_id         = (string)$this->xml->RefTransID;
-                
-                
             } else { // If it's an NVP response
-                
+
                 // Split Array
                 $this->response = $response;
                 if ($encap_char) {
@@ -179,13 +176,10 @@ class AuthorizeNetCP_Response extends AuthorizeNetResponse
                 $this->user_ref             = $this->_response_array[9];
                 $this->card_num             = $this->_response_array[20];
                 $this->card_type            = $this->_response_array[21];
-                $this->split_tender_id      = isset($this->_response_array[22]) ? $this->_response_array[22] : NULL;
-                $this->requested_amount     = isset($this->_response_array[23]) ? $this->_response_array[23] : NULL;
-                $this->approved_amount      = isset($this->_response_array[24]) ? $this->_response_array[24] : NULL;
-                $this->card_balance         = isset($this->_response_array[25]) ? $this->_response_array[25] : NULL;
-    
-    
-                
+                $this->split_tender_id      = isset($this->_response_array[22]) ? $this->_response_array[22] : null;
+                $this->requested_amount     = isset($this->_response_array[23]) ? $this->_response_array[23] : null;
+                $this->approved_amount      = isset($this->_response_array[24]) ? $this->_response_array[24] : null;
+                $this->card_balance         = isset($this->_response_array[25]) ? $this->_response_array[25] : null;
             }
             $this->approved = ($this->response_code == self::APPROVED);
             $this->declined = ($this->response_code == self::DECLINED);
@@ -200,7 +194,6 @@ class AuthorizeNetCP_Response extends AuthorizeNetResponse
                 Response Reason Text: ".$this->response_reason_text."
                 ";
             }
-            
         } else {
             $this->approved = false;
             $this->error = true;
@@ -222,6 +215,4 @@ class AuthorizeNetCP_Response extends AuthorizeNetResponse
         $md5_setting = ($md5_setting ? $md5_setting : AUTHORIZENET_MD5_SETTING);
         return ($this->md5_hash == strtoupper(md5($md5_setting . $api_login_id . $this->transaction_id . $amount)));
     }
-
 }
-

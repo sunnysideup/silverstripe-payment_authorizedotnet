@@ -2,14 +2,12 @@
 
 class AuthorizeNetTD_Test extends PHPUnit_Framework_TestCase
 {
-
-
     public function testGetSettledBatchList()
     {
         $request = new AuthorizeNetTD;
         $response = $request->getSettledBatchList();
         $this->assertTrue($response->isOk());
-        $this->assertEquals("I00001",(string)array_pop($response->xpath("messages/message/code")));
+        $this->assertEquals("I00001", (string)array_pop($response->xpath("messages/message/code")));
     }
 
     public function testGetSettledBatchListIncludeStatistics()
@@ -58,7 +56,6 @@ class AuthorizeNetTD_Test extends PHPUnit_Framework_TestCase
         $this->assertTrue($response->isOk());
         $transaction = $response->xml->transaction[0];
         $this->assertFalse(empty($transaction->returnedItems));
-
     }
 
 
@@ -90,7 +87,6 @@ class AuthorizeNetTD_Test extends PHPUnit_Framework_TestCase
         $this->assertEquals($transId, (string)$response->xml->transaction->transId);
         $this->assertEquals($amount, (string)$response->xml->transaction->authAmount);
         $this->assertEquals("Visa", (string)$response->xml->transaction->payment->creditCard->cardType);
-
     }
 
 
@@ -134,10 +130,8 @@ class AuthorizeNetTD_Test extends PHPUnit_Framework_TestCase
         $this->assertTrue($response->isOk());
         $this->assertTrue($response->xml->transactions->count() >= 1);
 
-        foreach($response->xml->transactions->transaction as $transaction)
-        {
-            if($transaction->hasReturnedItems)
-            {
+        foreach ($response->xml->transactions->transaction as $transaction) {
+            if ($transaction->hasReturnedItems) {
                 $this->assertEquals("false", $transaction->hasReturnedItems);
             }
         }
@@ -156,6 +150,4 @@ class AuthorizeNetTD_Test extends PHPUnit_Framework_TestCase
         $response = $request->getBatchStatistics($batchId);
         $this->assertTrue($response->isOk());
     }
-
-
 }

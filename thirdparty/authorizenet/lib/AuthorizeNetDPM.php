@@ -26,7 +26,6 @@
  */
 class AuthorizeNetDPM extends AuthorizeNetSIM_Form
 {
-
     const LIVE_URL = 'https://secure.authorize.net/gateway/transact.dll';
     const SANDBOX_URL = 'https://test.authorize.net/gateway/transact.dll';
 
@@ -38,45 +37,33 @@ class AuthorizeNetDPM extends AuthorizeNetSIM_Form
     {
         
         // Step 1: Show checkout form to customer.
-        if (!count($_POST) && !count($_GET))
-        {
+        if (!count($_POST) && !count($_GET)) {
             $fp_sequence = time(); // Any sequential number like an invoice number.
             echo AuthorizeNetDPM::getCreditCardForm($amount, $fp_sequence, $url, $api_login_id, $transaction_key);
         }
         // Step 2: Handle AuthorizeNet Transaction Result & return snippet.
-        elseif (count($_POST)) 
-        {
+        elseif (count($_POST)) {
             $response = new AuthorizeNetSIM($api_login_id, $md5_setting);
-            if ($response->isAuthorizeNet()) 
-            {
-                if ($response->approved) 
-                {
+            if ($response->isAuthorizeNet()) {
+                if ($response->approved) {
                     // Do your processing here.
-                    $redirect_url = $url . '?response_code=1&transaction_id=' . $response->transaction_id; 
-                }
-                else
-                {
+                    $redirect_url = $url . '?response_code=1&transaction_id=' . $response->transaction_id;
+                } else {
                     // Redirect to error page.
                     $redirect_url = $url . '?response_code='.$response->response_code . '&response_reason_text=' . $response->response_reason_text;
                 }
                 // Send the Javascript back to AuthorizeNet, which will redirect user back to your site.
                 echo AuthorizeNetDPM::getRelayResponseSnippet($redirect_url);
-            }
-            else
-            {
+            } else {
                 echo "Error -- not AuthorizeNet. Check your MD5 Setting.";
             }
         }
         // Step 3: Show receipt page to customer.
-        elseif (!count($_POST) && count($_GET))
-        {
-            if ($_GET['response_code'] == 1)
-            {
+        elseif (!count($_POST) && count($_GET)) {
+            if ($_GET['response_code'] == 1) {
                 echo "Thank you for your purchase! Transaction id: " . htmlentities($_GET['transaction_id']);
-            }
-            else
-            {
-              echo "Sorry, an error occurred: " . htmlentities($_GET['response_reason_text']);
+            } else {
+                echo "Sorry, an error occurred: " . htmlentities($_GET['response_reason_text']);
             }
         }
     }
@@ -233,5 +220,4 @@ class AuthorizeNetDPM extends AuthorizeNetSIM_Form
         </form>';
         return $form;
     }
-
 }

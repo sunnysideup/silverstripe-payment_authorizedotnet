@@ -5,7 +5,7 @@
  * @package AuthorizeNet
  */
 
-spl_autoload_register(function($className) {
+spl_autoload_register(function ($className) {
     static $classMap;
 
     if (!isset($classMap)) {

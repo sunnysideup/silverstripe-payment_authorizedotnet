@@ -109,20 +109,18 @@ class AuthorizeNetCP_Test extends PHPUnit_Framework_TestCase
 
 
         $this->assertTrue($response->approved);
-        $this->assertEquals('1.0',$response->version);
-        $this->assertEquals('1',$response->response_code);
-        $this->assertEquals('1',$response->response_reason_code);
-        $this->assertEquals('This transaction has been approved.',$response->response_reason_text);
-        $this->assertEquals('000000',$response->authorization_code);
-        $this->assertEquals('P',$response->avs_code);
-        $this->assertEquals('',$response->card_code_response);
-        $this->assertEquals('0',$response->transaction_id);
-        $this->assertStringMatchesFormat('%x',$response->md5_hash);
+        $this->assertEquals('1.0', $response->version);
+        $this->assertEquals('1', $response->response_code);
+        $this->assertEquals('1', $response->response_reason_code);
+        $this->assertEquals('This transaction has been approved.', $response->response_reason_text);
+        $this->assertEquals('000000', $response->authorization_code);
+        $this->assertEquals('P', $response->avs_code);
+        $this->assertEquals('', $response->card_code_response);
+        $this->assertEquals('0', $response->transaction_id);
+        $this->assertStringMatchesFormat('%x', $response->md5_hash);
         $this->assertEquals($user_ref, $response->user_ref);
-        $this->assertEquals('XXXX1111',$response->card_num);
-        $this->assertEquals('Visa',$response->card_type);
-
-
+        $this->assertEquals('XXXX1111', $response->card_num);
+        $this->assertEquals('Visa', $response->card_type);
     }
 
     public function testXmlResponse()
@@ -141,20 +139,18 @@ class AuthorizeNetCP_Test extends PHPUnit_Framework_TestCase
 
 
         $this->assertTrue($response->approved);
-        $this->assertEquals('1.0',$response->version);
-        $this->assertEquals('1',$response->response_code);
-        $this->assertEquals('1',$response->response_reason_code);
-        $this->assertEquals('This transaction has been approved.',$response->response_reason_text);
-        $this->assertEquals('000000',$response->authorization_code);
-        $this->assertEquals('P',$response->avs_code);
-        $this->assertEquals('',$response->card_code_response);
-        $this->assertEquals('0',$response->transaction_id);
-        $this->assertStringMatchesFormat('%x',$response->md5_hash);
+        $this->assertEquals('1.0', $response->version);
+        $this->assertEquals('1', $response->response_code);
+        $this->assertEquals('1', $response->response_reason_code);
+        $this->assertEquals('This transaction has been approved.', $response->response_reason_text);
+        $this->assertEquals('000000', $response->authorization_code);
+        $this->assertEquals('P', $response->avs_code);
+        $this->assertEquals('', $response->card_code_response);
+        $this->assertEquals('0', $response->transaction_id);
+        $this->assertStringMatchesFormat('%x', $response->md5_hash);
         $this->assertEquals($user_ref, $response->user_ref);
-        $this->assertEquals('XXXX1111',$response->card_num);
-        $this->assertEquals('Visa',$response->card_type);
-
-
+        $this->assertEquals('XXXX1111', $response->card_num);
+        $this->assertEquals('Visa', $response->card_type);
     }
 
     public function testXmlResponseFailure()
@@ -173,20 +169,16 @@ class AuthorizeNetCP_Test extends PHPUnit_Framework_TestCase
 
 
         $this->assertTrue($response->error);
-        $this->assertEquals('1.0',$response->version);
-        $this->assertEquals('3',$response->response_code);
-        $this->assertEquals('6',$response->response_reason_code);
-        $this->assertEquals('The credit card number is invalid.',$response->response_reason_text);
-        $this->assertEquals('000000',$response->authorization_code);
-        $this->assertEquals('P',$response->avs_code);
-        $this->assertEquals('',$response->card_code_response);
-        $this->assertEquals('0',$response->transaction_id);
-        $this->assertStringMatchesFormat('%x',$response->md5_hash);
+        $this->assertEquals('1.0', $response->version);
+        $this->assertEquals('3', $response->response_code);
+        $this->assertEquals('6', $response->response_reason_code);
+        $this->assertEquals('The credit card number is invalid.', $response->response_reason_text);
+        $this->assertEquals('000000', $response->authorization_code);
+        $this->assertEquals('P', $response->avs_code);
+        $this->assertEquals('', $response->card_code_response);
+        $this->assertEquals('0', $response->transaction_id);
+        $this->assertStringMatchesFormat('%x', $response->md5_hash);
         $this->assertEquals($user_ref, $response->user_ref);
-        $this->assertEquals('XXXX1111',$response->card_num);
-
-
+        $this->assertEquals('XXXX1111', $response->card_num);
     }
-
-
 }

@@ -13,23 +13,22 @@
  *
  * @package    AuthorizeNet
  * @subpackage AuthorizeNetTD
- */ 
+ */
 class AuthorizeNetTD extends AuthorizeNetRequest
 {
-
     const LIVE_URL = "https://api.authorize.net/xml/v1/request.api";
     const SANDBOX_URL = "https://apitest.authorize.net/xml/v1/request.api";
     
     private $_xml;
     
     /**
-     * This function returns information about a settled batch: Batch ID, Settlement Time, & 
-     * Settlement State. If you specify includeStatistics, you also receive batch statistics 
+     * This function returns information about a settled batch: Batch ID, Settlement Time, &
+     * Settlement State. If you specify includeStatistics, you also receive batch statistics
      * by payment type.
      *
      *
-     * The detault date range is one day (the previous 24 hour period). The maximum date range is 31 
-     * days. The merchant time zone is taken into consideration when calculating the batch date range, 
+     * The detault date range is one day (the previous 24 hour period). The maximum date range is 31
+     * days. The merchant time zone is taken into consideration when calculating the batch date range,
      * unless the Z is specified in the first and last settlement date
      *
      * @param bool   $includeStatistics
@@ -64,8 +63,8 @@ class AuthorizeNetTD extends AuthorizeNetRequest
     {
         $month = ($month ? $month : date('m'));
         $year = ($year ? $year : date('Y'));
-        $firstSettlementDate = substr(date('c',mktime(0, 0, 0, $month, 1, $year)),0,-6);
-        $lastSettlementDate  = substr(date('c',mktime(0, 0, 0, $month+1, 0, $year)),0,-6);
+        $firstSettlementDate = substr(date('c', mktime(0, 0, 0, $month, 1, $year)), 0, -6);
+        $lastSettlementDate  = substr(date('c', mktime(0, 0, 0, $month+1, 0, $year)), 0, -6);
         return $this->getSettledBatchList(true, $firstSettlementDate, $lastSettlementDate);
     }
 
@@ -98,8 +97,8 @@ class AuthorizeNetTD extends AuthorizeNetRequest
         $month = ($month ? $month : date('m'));
         $day = ($day ? $day : date('d'));
         $year = ($year ? $year : date('Y'));
-        $firstSettlementDate = substr(date('c',mktime(0, 0, 0, (int)$month, (int)$day, (int)$year)),0,-6);
-        $lastSettlementDate  = substr(date('c',mktime(0, 0, 0, (int)$month, (int)$day, (int)$year)),0,-6);
+        $firstSettlementDate = substr(date('c', mktime(0, 0, 0, (int)$month, (int)$day, (int)$year)), 0, -6);
+        $lastSettlementDate  = substr(date('c', mktime(0, 0, 0, (int)$month, (int)$day, (int)$year)), 0, -6);
         $response = $this->getSettledBatchList(true, $firstSettlementDate, $lastSettlementDate);
         $batches = $response->xpath("batchList/batch");
         foreach ($batches as $batch) {
@@ -117,7 +116,7 @@ class AuthorizeNetTD extends AuthorizeNetRequest
      * @param int $transId
      *
      * @return AuthorizeNetTD_Response
-     */    
+     */
     public function getTransactionDetails($transId)
     {
         $this->_constructXml("getTransactionDetailsRequest");
@@ -163,7 +162,7 @@ class AuthorizeNetTD extends AuthorizeNetRequest
      *
      *
      * @param string $response
-     * 
+     *
      * @return AuthorizeNetTransactionDetails_Response
      */
     protected function _handleResponse($response)
@@ -177,7 +176,6 @@ class AuthorizeNetTD extends AuthorizeNetRequest
     protected function _setPostString()
     {
         $this->_post_string = $this->_xml->asXML();
-        
     }
     
     /**
@@ -190,10 +188,9 @@ class AuthorizeNetTD extends AuthorizeNetRequest
         $string = '<?xml version="1.0" encoding="utf-8"?><'.$request_type.' xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd"></'.$request_type.'>';
         $this->_xml = @new SimpleXMLElement($string);
         $merchant = $this->_xml->addChild('merchantAuthentication');
-        $merchant->addChild('name',$this->_api_login);
-        $merchant->addChild('transactionKey',$this->_transaction_key);
+        $merchant->addChild('name', $this->_api_login);
+        $merchant->addChild('transactionKey', $this->_transaction_key);
     }
-    
 }
 
 /**
@@ -204,6 +201,4 @@ class AuthorizeNetTD extends AuthorizeNetRequest
  */
 class AuthorizeNetTD_Response extends AuthorizeNetXMLResponse
 {
-    
-
 }

@@ -21,7 +21,6 @@ class AuthorizeNetCustomer
     public $paymentProfiles = array();
     public $shipToList = array();
     public $customerProfileId;
-    
 }
  
 /**
@@ -53,7 +52,6 @@ class AuthorizeNetAddress
  */
 class AuthorizeNetPaymentProfile
 {
-    
     public $customerType;
     public $billTo;
     public $payment;
@@ -64,7 +62,6 @@ class AuthorizeNetPaymentProfile
         $this->billTo = new AuthorizeNetAddress;
         $this->payment = new AuthorizeNetPayment;
     }
-
 }
 
 /**
@@ -130,13 +127,12 @@ class AuthorizeNetTransaction
         $this->duty->description = "";
         
         // line items
-        
+
         $this->order = (object)array();
         $this->order->invoiceNumber = "";
         $this->order->description = "";
         $this->order->purchaseOrderNumber = "";
     }
-    
 }
 
 /**
@@ -153,7 +149,6 @@ class AuthorizeNetLineItem
     public $quantity;
     public $unitPrice;
     public $taxable;
-
 }
 
 /**
@@ -193,7 +188,6 @@ class AuthorizeNetBankAccount
  */
 class AuthorizeNet_Subscription
 {
-
     public $name;
     public $intervalLength;
     public $intervalUnit;

@@ -2,8 +2,7 @@
 
 class AuthorizeNet_SOAP_Test extends PHPUnit_Framework_TestCase
 {
-
-    public function testSaveSoapDoc ()
+    public function testSaveSoapDoc()
     {
         $filepath = dirname(__FILE__) . "/soap_doc.php";
         $client = new AuthorizeNetSOAP;
@@ -11,7 +10,7 @@ class AuthorizeNet_SOAP_Test extends PHPUnit_Framework_TestCase
         unlink($filepath);
     }
 
-    public function testGetCustomerIds ()
+    public function testGetCustomerIds()
     {
         $client = new AuthorizeNetSOAP;
         $result = $client->GetCustomerProfileIds(
@@ -25,5 +24,4 @@ class AuthorizeNet_SOAP_Test extends PHPUnit_Framework_TestCase
         $customer_ids = $result->GetCustomerProfileIdsResult->ids->long;
         $this->assertTrue(is_array($customer_ids));
     }
-
 }

@@ -7,10 +7,9 @@
  */
 abstract class AuthorizeNetRequest
 {
-    
     protected $_api_login;
     protected $_transaction_key;
-    protected $_post_string; 
+    protected $_post_string;
     public $VERIFY_PEER = true; // attempt trust validation of SSL certificates when establishing secure connections.
     protected $_sandbox = true;
     protected $_log_file = false;
@@ -94,20 +93,19 @@ abstract class AuthorizeNetRequest
         if ($this->VERIFY_PEER) {
             curl_setopt($curl_request, CURLOPT_CAINFO, dirname(dirname(__FILE__)) . '/ssl/cert.pem');
         } else {
-			if ($this->_log_file) {
-				file_put_contents($this->_log_file, "----Request----\nInvalid SSL option\n", FILE_APPEND);
-			}
-			return false;
+            if ($this->_log_file) {
+                file_put_contents($this->_log_file, "----Request----\nInvalid SSL option\n", FILE_APPEND);
+            }
+            return false;
         }
         
-        if (preg_match('/xml/',$post_url)) {
-            curl_setopt($curl_request, CURLOPT_HTTPHEADER, Array("Content-Type: text/xml"));
+        if (preg_match('/xml/', $post_url)) {
+            curl_setopt($curl_request, CURLOPT_HTTPHEADER, array("Content-Type: text/xml"));
         }
         
         $response = curl_exec($curl_request);
         
         if ($this->_log_file) {
-        
             if ($curl_error = curl_error($curl_request)) {
                 file_put_contents($this->_log_file, "----CURL ERROR----\n$curl_error\n\n", FILE_APPEND);
             }
@@ -120,5 +118,4 @@ abstract class AuthorizeNetRequest
         
         return $this->_handleResponse($response);
     }
-
 }

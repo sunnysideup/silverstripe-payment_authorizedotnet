@@ -14,7 +14,6 @@
  */
 class AuthorizeNetXMLResponse
 {
-
     public $xml; // Holds a SimpleXML Element with response.
 
     /**
@@ -29,7 +28,7 @@ class AuthorizeNetXMLResponse
             $this->xml = @simplexml_load_string($response);
             
             // Remove namespaces for use with XPath.
-            $this->xpath_xml = @simplexml_load_string(preg_replace('/ xmlns:xsi[^>]+/','',$response));
+            $this->xpath_xml = @simplexml_load_string(preg_replace('/ xmlns:xsi[^>]+/', '', $response));
         }
     }
     
@@ -66,12 +65,12 @@ class AuthorizeNetXMLResponse
 
     /**
      * @return string
-     */    
+     */
     public function getErrorMessage()
     {
         return "Error: {$this->getResultCode()} 
         Message: {$this->getMessageText()}
-        {$this->getMessageCode()}";    
+        {$this->getMessageCode()}";
     }
     
     /**
@@ -112,11 +111,11 @@ class AuthorizeNetXMLResponse
      * @param  string
      * @return string
      */
-    protected function _getElementContents($elementName) 
+    protected function _getElementContents($elementName)
     {
         $start = "<$elementName>";
         $end = "</$elementName>";
-        if (strpos($this->response,$start) === false || strpos($this->response,$end) === false) {
+        if (strpos($this->response, $start) === false || strpos($this->response, $end) === false) {
             return false;
         } else {
             $start_position = strpos($this->response, $start)+strlen($start);
@@ -124,5 +123,4 @@ class AuthorizeNetXMLResponse
             return substr($this->response, $start_position, $end_position-$start_position);
         }
     }
-
 }

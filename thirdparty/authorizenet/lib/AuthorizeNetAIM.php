@@ -23,7 +23,7 @@
  *
  * Note: To send requests to the live gateway, either define this:
  * define("AUTHORIZENET_SANDBOX", false);
- *   -- OR -- 
+ *   -- OR --
  * $sale = new AuthorizeNetAIM;
  * $sale->setSandbox(false);
  *
@@ -41,16 +41,15 @@
  */
 class AuthorizeNetAIM extends AuthorizeNetRequest
 {
-
     const LIVE_URL = 'https://secure.authorize.net/gateway/transact.dll';
     const SANDBOX_URL = 'https://test.authorize.net/gateway/transact.dll';
     
     /**
-     * Holds all the x_* name/values that will be posted in the request. 
+     * Holds all the x_* name/values that will be posted in the request.
      * Default values are provided for best practice fields.
      */
     protected $_x_post_fields = array(
-        "version" => "3.1", 
+        "version" => "3.1",
         "delim_char" => ",",
         "delim_data" => "TRUE",
         "relay_response" => "FALSE",
@@ -93,8 +92,8 @@ class AuthorizeNetAIM extends AuthorizeNetRequest
         );
     
     /**
-     * Do an AUTH_CAPTURE transaction. 
-     * 
+     * Do an AUTH_CAPTURE transaction.
+     *
      * Required "x_" fields: card_num, exp_date, amount
      *
      * @param string $amount   The dollar amount to charge
@@ -219,7 +218,7 @@ class AuthorizeNetAIM extends AuthorizeNetRequest
      * @param string $name
      * @param string $value
      */
-    public function __set($name, $value) 
+    public function __set($name, $value)
     {
         $this->setField($name, $value);
     }
@@ -255,7 +254,7 @@ class AuthorizeNetAIM extends AuthorizeNetRequest
     
     /**
      * Add a line item.
-     * 
+     *
      * @param string $item_id
      * @param string $item_name
      * @param string $item_description
@@ -339,7 +338,7 @@ class AuthorizeNetAIM extends AuthorizeNetRequest
      *
      *
      * @param string $response
-     * 
+     *
      * @return AuthorizeNetAIM_Response
      */
     protected function _handleResponse($response)
@@ -496,5 +495,4 @@ class AuthorizeNetAIM_Response extends AuthorizeNetResponse
             $this->error_message = "Error connecting to AuthorizeNet";
         }
     }
-
 }

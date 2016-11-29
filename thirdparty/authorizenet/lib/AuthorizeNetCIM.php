@@ -14,10 +14,9 @@
  *
  * @package    AuthorizeNet
  * @subpackage AuthorizeNetCIM
- */ 
+ */
 class AuthorizeNetCIM extends AuthorizeNetRequest
 {
-
     const LIVE_URL = "https://api.authorize.net/xml/v1/request.api";
     const SANDBOX_URL = "https://apitest.authorize.net/xml/v1/request.api";
 
@@ -269,7 +268,6 @@ class AuthorizeNetCIM extends AuthorizeNetRequest
      */
     public function updateCustomerShippingAddress($customerProfileId, $customerShippingAddressId, $shippingAddress)
     {
-        
         $this->_constructXml("updateCustomerShippingAddressRequest");
         $this->_xml->addChild("customerProfileId", $customerProfileId);
         $shippingAddress->customerAddressId = $customerShippingAddressId;
@@ -309,10 +307,10 @@ class AuthorizeNetCIM extends AuthorizeNetRequest
     {
         $this->_validationMode = $validationMode;
         $this->_constructXml("validateCustomerPaymentProfileRequest");
-        $this->_xml->addChild("customerProfileId",$customerProfileId);
-        $this->_xml->addChild("customerPaymentProfileId",$customerPaymentProfileId);
-        $this->_xml->addChild("customerShippingAddressId",$customerShippingAddressId);
-        $this->_xml->addChild("cardCode",$cardCode);
+        $this->_xml->addChild("customerProfileId", $customerProfileId);
+        $this->_xml->addChild("customerPaymentProfileId", $customerPaymentProfileId);
+        $this->_xml->addChild("customerShippingAddressId", $customerShippingAddressId);
+        $this->_xml->addChild("cardCode", $cardCode);
         return $this->_sendRequest();
     }
     
@@ -353,7 +351,7 @@ class AuthorizeNetCIM extends AuthorizeNetRequest
      *
      *
      * @param string $response
-     * 
+     *
      * @return AuthorizeNetCIM_Response
      */
     protected function _handleResponse($response)
@@ -366,13 +364,13 @@ class AuthorizeNetCIM extends AuthorizeNetRequest
      */
     protected function _setPostString()
     {
-        ($this->_validationMode != "none" ? $this->_xml->addChild('validationMode',$this->_validationMode) : "");
+        ($this->_validationMode != "none" ? $this->_xml->addChild('validationMode', $this->_validationMode) : "");
         $this->_post_string = $this->_xml->asXML();
         
         // Add extraOptions CDATA
         if ($this->_extraOptions) {
             $this->_xml->addChild("extraOptions");
-            $this->_post_string = str_replace(array("<extraOptions></extraOptions>","<extraOptions/>"),'<extraOptions><![CDATA[' . $this->_extraOptions . ']]></extraOptions>', $this->_xml->asXML());
+            $this->_post_string = str_replace(array("<extraOptions></extraOptions>", "<extraOptions/>"), '<extraOptions><![CDATA[' . $this->_extraOptions . ']]></extraOptions>', $this->_xml->asXML());
             $this->_extraOptions = false;
         }
         // Blank out our validation mode, so that we don't include it in calls that
@@ -390,16 +388,16 @@ class AuthorizeNetCIM extends AuthorizeNetRequest
         $string = '<?xml version="1.0" encoding="utf-8"?><'.$request_type.' xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd"></'.$request_type.'>';
         $this->_xml = @new SimpleXMLElement($string);
         $merchant = $this->_xml->addChild('merchantAuthentication');
-        $merchant->addChild('name',$this->_api_login);
-        $merchant->addChild('transactionKey',$this->_transaction_key);
-        ($this->_refId ? $this->_xml->addChild('refId',$this->_refId) : "");
+        $merchant->addChild('name', $this->_api_login);
+        $merchant->addChild('transactionKey', $this->_transaction_key);
+        ($this->_refId ? $this->_xml->addChild('refId', $this->_refId) : "");
     }
     
     /**
      * Add an object to an SimpleXMLElement parent element.
      *
      * @param SimpleXMLElement $destination The parent element.
-     * @param Object           $object      An object, array or value.  
+     * @param Object           $object      An object, array or value.
      */
     private function _addObject($destination, $object)
     {
@@ -412,7 +410,7 @@ class AuthorizeNetCIM extends AuthorizeNetRequest
                         $this->_addObject($items, $item);
                     }
                 } else {
-                    $destination->addChild($key,$value);
+                    $destination->addChild($key, $value);
                 }
             } elseif (is_object($value) && self::_notEmpty($value)) {
                 $dest = $destination->addChild($key);
@@ -442,7 +440,6 @@ class AuthorizeNetCIM extends AuthorizeNetRequest
         }
         return false;
     }
-    
 }
 
 /**
@@ -532,5 +529,4 @@ class AuthorizeNetCIM_Response extends AuthorizeNetXMLResponse
     {
         return $this->_getElementContents("customerPaymentProfileId");
     }
-
 }

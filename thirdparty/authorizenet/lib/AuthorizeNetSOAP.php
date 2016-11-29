@@ -51,9 +51,9 @@ class AuthorizeNetSOAP extends SoapClient
         $string = "";
         $types = $this->__getTypes();
         foreach ($types as $type) {
-            if (preg_match("/struct /",$type)) {
-                $type = preg_replace("/struct /","class ",$type);
-                $type = preg_replace("/ (\w+) (\w+);/","    // $1\n    public \$$2;",$type);
+            if (preg_match("/struct /", $type)) {
+                $type = preg_replace("/struct /", "class ", $type);
+                $type = preg_replace("/ (\w+) (\w+);/", "    // $1\n    public \$$2;", $type);
                 $string .= $type ."\n";
             }
         }
@@ -93,7 +93,4 @@ class AuthorizeNetSOAP extends SoapClient
         $string .= "{\n" . $this->getSoapMethods() . "\n}\n\n" . $this->getSoapTypes() ."\n\n ?>";
         return file_put_contents($path, $string);
     }
-    
-    
-    
 }

@@ -15,7 +15,6 @@
  */
 class AuthorizeNetResponse
 {
-
     const APPROVED = 1;
     const DECLINED = 2;
     const ERROR = 3;
@@ -71,5 +70,4 @@ class AuthorizeNetResponse
     public $requested_amount;
     public $balance_on_card;
     public $response; // The response string from AuthorizeNet.
-
 }

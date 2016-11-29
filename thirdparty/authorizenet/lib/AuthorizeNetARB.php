@@ -16,7 +16,6 @@
  */
 class AuthorizeNetARB extends AuthorizeNetRequest
 {
-
     const LIVE_URL = "https://api.authorize.net/xml/v1/request.api";
     const SANDBOX_URL = "https://apitest.authorize.net/xml/v1/request.api";
 
@@ -110,7 +109,7 @@ class AuthorizeNetARB extends AuthorizeNetRequest
      *
      *
      * @param string $response
-     * 
+     *
      * @return AuthorizeNetARB_Response
      */
     protected function _handleResponse($response)
@@ -142,7 +141,6 @@ class AuthorizeNetARB extends AuthorizeNetRequest
 </ARB{$this->_request_type}>
 XML;
     }
-    
 }
 
 
@@ -170,5 +168,4 @@ class AuthorizeNetARB_Response extends AuthorizeNetXMLResponse
     {
         return $this->_getElementContents("Status");
     }
-
 }

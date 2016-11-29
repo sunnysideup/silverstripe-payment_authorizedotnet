@@ -2,7 +2,6 @@
 
 class AuthorizeNetAIM_Sandbox_Test extends PHPUnit_Framework_TestCase
 {
-
     public function testAuthCapture()
     {
         $sale = new AuthorizeNetAIM;
@@ -101,8 +100,6 @@ class AuthorizeNetAIM_Sandbox_Test extends PHPUnit_Framework_TestCase
         $sale->allow_partial_auth = true;
         $response = $sale->authorizeAndCapture();
         $this->assertTrue($response->approved);
-
-
     }
 
     public function testAuthCaptureShortNoVerify()
@@ -175,11 +172,10 @@ class AuthorizeNetAIM_Sandbox_Test extends PHPUnit_Framework_TestCase
 
     public function testAimResponseFields()
     {
-
         $sale = new AuthorizeNetAIM;
         $sale->card_num           = '4111111111111111';
         $sale->exp_date           = '04/16';
-        $sale->amount             = $amount = rand(1,99);
+        $sale->amount             = $amount = rand(1, 99);
         $sale->description        = $description = "Sale description";
         $sale->first_name         = $first_name = "Jane";
         $sale->last_name          = $last_name = "Smith";
@@ -258,8 +254,6 @@ class AuthorizeNetAIM_Sandbox_Test extends PHPUnit_Framework_TestCase
         $this->assertEquals("", $response->split_tender_id);
         $this->assertEquals("", $response->requested_amount);
         $this->assertEquals("", $response->balance_on_card);
-
-
     }
 
 
@@ -323,7 +317,6 @@ class AuthorizeNetAIM_Sandbox_Test extends PHPUnit_Framework_TestCase
         $response = $sale->authorizeAndCapture();
         $this->assertEquals("ECHECK", $response->method);
         $this->assertTrue($response->approved);
-
     }
 
     public function testAmex()
@@ -573,7 +566,6 @@ class AuthorizeNetAIM_Sandbox_Test extends PHPUnit_Framework_TestCase
         // An exception should have been thrown.
         $this->assertFalse($response->approved);
         $this->assertTrue($response->error);
-
     }
 
     public function testMultipleLineItems()
@@ -766,24 +758,20 @@ class AuthorizeNetAIM_Sandbox_Test extends PHPUnit_Framework_TestCase
             $this->assertTrue($result->approved);
             // should have thrown an exception by now
             $this->assertFalse(true);
-        }
-        catch (AuthorizeNetException $e){
+        } catch (AuthorizeNetException $e) {
             $this->assertTrue(true);
-
         }
     }
-
 }
 
 
 class AuthorizeNetAIM_Live_Test extends PHPUnit_Framework_TestCase
 {
-
     public function testAuthCaptureSetECheckMethod()
     {
         if (MERCHANT_LIVE_API_LOGIN_ID) {
             // $this->markTestIncomplete('Depends on whether eChecks is enabled');
-            $sale = new AuthorizeNetAIM(MERCHANT_LIVE_API_LOGIN_ID,MERCHANT_LIVE_TRANSACTION_KEY);
+            $sale = new AuthorizeNetAIM(MERCHANT_LIVE_API_LOGIN_ID, MERCHANT_LIVE_TRANSACTION_KEY);
             $sale->setSandbox(false);
             $sale->test_request = 'TRUE';
             $sale->amount = "4.99";
@@ -806,7 +794,7 @@ class AuthorizeNetAIM_Live_Test extends PHPUnit_Framework_TestCase
     {
         if (MERCHANT_LIVE_API_LOGIN_ID) {
             // $this->markTestIncomplete('Depends on whether eChecks is enabled');
-            $sale = new AuthorizeNetAIM(MERCHANT_LIVE_API_LOGIN_ID,MERCHANT_LIVE_TRANSACTION_KEY);
+            $sale = new AuthorizeNetAIM(MERCHANT_LIVE_API_LOGIN_ID, MERCHANT_LIVE_TRANSACTION_KEY);
             $sale->setSandbox(false);
             $sale->test_request = 'TRUE';
             $sale->setFields(
@@ -831,7 +819,7 @@ class AuthorizeNetAIM_Live_Test extends PHPUnit_Framework_TestCase
     public function testAuthCaptureLiveServerTestRequest()
     {
         if (MERCHANT_LIVE_API_LOGIN_ID) {
-            $sale = new AuthorizeNetAIM(MERCHANT_LIVE_API_LOGIN_ID,MERCHANT_LIVE_TRANSACTION_KEY);
+            $sale = new AuthorizeNetAIM(MERCHANT_LIVE_API_LOGIN_ID, MERCHANT_LIVE_TRANSACTION_KEY);
             $sale->setSandbox(false);
             $sale->setFields(
                 array(
@@ -849,7 +837,7 @@ class AuthorizeNetAIM_Live_Test extends PHPUnit_Framework_TestCase
     public function testAuthCaptureLiveServer()
     {
         if (MERCHANT_LIVE_API_LOGIN_ID) {
-            $sale = new AuthorizeNetAIM(MERCHANT_LIVE_API_LOGIN_ID,MERCHANT_LIVE_TRANSACTION_KEY);
+            $sale = new AuthorizeNetAIM(MERCHANT_LIVE_API_LOGIN_ID, MERCHANT_LIVE_TRANSACTION_KEY);
             $sale->setSandbox(false);
             $sale->test_request = 'TRUE';
             $sale->setFields(
@@ -868,7 +856,7 @@ class AuthorizeNetAIM_Live_Test extends PHPUnit_Framework_TestCase
     {
         if (MERCHANT_LIVE_API_LOGIN_ID) {
             // Post a response to live server using invalid credentials.
-            $sale = new AuthorizeNetAIM('a','a');
+            $sale = new AuthorizeNetAIM('a', 'a');
             $sale->setSandbox(false);
             $sale->setFields(
                 array(
@@ -882,5 +870,4 @@ class AuthorizeNetAIM_Live_Test extends PHPUnit_Framework_TestCase
             $this->assertEquals("13", $response->response_reason_code);
         }
     }
-
 }
